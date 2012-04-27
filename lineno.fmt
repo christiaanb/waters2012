@@ -35,7 +35,7 @@
 
 \newcommand{\linenumsetupleft}{\column{line}{@@{}l@@{}}\column{lineend}{}\column{B}{}}
 %\newcommand{\linenumsetupleft}{\column{line}{@@{}>{\setbox0=\hbox\bgroup}l<{\egroup\makebox[0pt][r]{\box0\ }}@@{}}\column{lineend}{}\column{B}{}}
-\newcommand{\linenumsetupright}{\setlength{\linetemp}{\linewidth-\mathindent-1.2em}\column[\linetemp]{line}{@@{}l@@{}}\column{lineend}{}\column{B}{}}
+\newcommand{\linenumsetupright}{\setlength{\linetemp}{\linewidth-\mathindent-1.5em}\column[\linetemp]{line}{@@{}l@@{}}\column{lineend}{}\column{B}{}}
 \newcommand{\linenumfromtoleft}{\fromto{line}{lineend}}
 \newcommand{\linenumfromtoright}{\fromto{line}{lineend}}
 \newcommand{\numbersright}{\let\linenumsetup\linenumsetupright\let\printlinebegin\empty\def\printlineend{\printline}\let\linenumfromto\linenumfromtoright\def\linenumalign{l}}

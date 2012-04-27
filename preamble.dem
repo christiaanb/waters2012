@@ -1,14 +1,6 @@
 % Use UTF-8 Character in source
 \usepackage[utf8x]{inputenc}
 \newcommand\textlambda{\ensuremath{\lambda}}
-\newcommand\textalpha{\ensuremath{\alpha}}
-\newcommand\textbeta{\ensuremath{\beta}}
-\newcommand\textgamma{\ensuremath{\gamma}}
-\newcommand\textdelta{\ensuremath{\delta}}
-\newcommand\textrho{\ensuremath{\rho}}
-
-% Support for the \leftY symbol
-\usepackage{MnSymbol}
 
 % Support for graphics
 \usepackage{graphics}
@@ -31,22 +23,14 @@
 }
 
 % New caption environment for code listings
-\usepackage{caption}
-\DeclareCaptionType[placement=h]{slisting}[Listing]
+\usepackage{float}
+\floatstyle{ruled}
+\newfloat{programlisting}{ht}{lop}
+\floatname{programlisting}{Listing}
 
-\newenvironment{listing}[2]{%
-\def\mycaption{#1}%
-\def\mylabel{#2}%
-\begin{slisting}%
-\vspace{-0.75em}%
-\numbersreset{}
-}{%
-\vspace{-1.5em}
-\caption{\mycaption}%
-\label{\mylabel}%
-\vspace{-0.5em}%
-\end{slisting}
-}
+\newenvironment{program}{\begin{programlisting}\mathindent1em\numbersreset}{\vspace{-0.5em}\end{programlisting}}
 
-\setlength\mathindent{1em}
+\usepackage{cite}
+
+% \setlength\mathindent{1em}
 \numbersright
