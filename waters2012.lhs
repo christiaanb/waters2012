@@ -8,7 +8,7 @@
 
 \begin{document}
 
-\title{PANACEA - Functional System Design Space Exploration}
+\title{SoOSiM: System and Programming Language Exploration}
 
 \author{\IEEEauthorblockN{Christiaan Baaij\thanks{Supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465}, Jan Kuper}
 \IEEEauthorblockA{Computer Architecture for Embedded Systems\\
@@ -21,8 +21,14 @@ Email: \url{{c.p.r.baaij;j.kuper}@@utwente.nl}}
 
 \begin{abstract}
 \boldmath
-To offer the panacea for complete system design space exploration, from hardware, over the OS, to applications.
-To put an end to crappy 6-core, 2-router NoC/SoC examples --- where a fully-connected point-to-point architecture would work better --- found in accepted papers at `respected' conferences.
+SoOSiM is a simulator developed for the purpose of exploration of new operating system concepts and operating system modules.
+The simulator provides a highly abstracted view of a computing system, consisting of computing nodes, and components that are concurrently executed on these nodes.
+OS modules are subsequently modelled as components that progress as a result of reacting to two types of events: messages from other components, or a system-wide tick event.
+Using this abstract view, a developer can quickly formalize assertions regarding the interaction between operating system modules and applications.
+
+On top of SoOSiM a methodology was developed that allows the precise control of the interaction between simulated application and simulated operating system.
+Embedded languages are used to model the application, and ad-hoc polymorphism is used to give different interpretations to the same application description.
+The combination of SoOSim and embedded languages facilitates the exploration of new programming language concepts and their interaction with the operating system.
 \end{abstract}
 
 \section{Introduction}
@@ -39,37 +45,76 @@ Hence, we also require that our simulator facilitates the straightforward creati
 Our current needs for a simulator rest mostly in formalizing our ideas, and examining the interaction between OS modules and application threads.
 As such, being able to extract highly accurate performance figures is not required.
 We do however wish to be able to observe all interactions among applications threads and OS modules.
-Additionally, we wish to be able to 'zoom in' on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
+Additionally, we wish to be able to \emph{zoom in} on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
 
-% Additionally, our simulation needs mostly rest on testing and formalizing the ideas of our OS concepts, and not so much on measuring exact performance.
-% Although there is still a need to get an insight how our OS concepts and modules scale, exact cycle counts are certainly not required.
+This paper describes a new simulator, \emph{SoOSiM}, that meets the above requirements.
+We elaborate on the main concepts of the simulator in Section~\ref{sec_soosim}, and show how OS modules interact with each other, and the simulator.
+In Section~\ref{sec_embedded_programming_environment} we describe the use of embedded languages for creation of applications running in the simulated environment.
+The simulation engine, the graphical user interface, and embedded language environment are all written in the functional programming language Haskell\cite{Haskell};
+this means that all code listings in this paper will also show Haskell code.
+We will compare \emph{SoOSiM} to other approaches in Section~\ref{sec_related_work}.
+We enumerate our experiences with the simulator in Section~\ref{sec_conclusions}, and list potential future work in Section~\ref{sec_future_work}
 
+\section{An Abstracted System View}
+\label{sec_soosim}
+The purpose of SoOSiM is mainly to provide a platform that allows a developer to observe the interactions between OS modules and application threads.
+It is for this reason that we have chosen to make the simulated hardware as abstract as possible.
+In SoOSiM, the hardware platform is described as a set of nodes.
+Each \emph{node} represents a physical computing object; such as a core, complete CPU, memory controller, etc.
+Every node has a local memory of potentially infinite size.
+The connectivity between nodes is not explicitly modelled.
 
-\section{Abstracted System}
-There are two basic entities in our abstract view of a system:
-\begin{itemize}
-  \item \textbf{Nodes:} Representing a physical computing object; such as a core, complete CPU, router, memory controller, etc.
-  \item \textbf{Components:} Representing an execution object; such as a thread, application, OS module, etc.
-\end{itemize}
-A system consists of a set of \emph{nodes}, each hosting their own set of \emph{components}.
-Every \emph{node} has a local internal \emph{memory} which can be accessed by both local and remote components.
-All components on a node are executed concurrently, and all nodes are executed concurrently with respect to eachother.
-Components can communicate using either direct messaging, or through the local memory of a node.
+Each \emph{node} hosts a set of components.
+A \emph{components} represents an executable object; such as a thread, application, OS module, etc.
+Components communicate with each other using either direct messaging, or through the local memory of a node.
+All components in a simulated system, even those hosted within the same node, are executed concurrently.
+The simulator poses no restrictions on which components can communicate with each other, nor to which local memory they can read form and write to.
+A user of SoOSiM would have to model those restrictions explicitly if required.
+A schematic overview of example system can be seen in Figure~\ref{img_system}.
 
-\section{Simulation API}
-Components have several functions at their disposal to communicate with the simulator:
-\begin{itemize}
-  \item \textbf{CreateNode:} Creating a new computing node.
-  \item \textbf{CreateComponent:} Instantiate a component on a specified node.
-  \item \textbf{Invoke:} Send a message to another component, and wait for the answer.
-  \item \textbf{InvokeAsync:} Send a message to another component, and register a callback to handle the response.
-  \item \textbf{ReadMem:} Read the memory of a specified node.
-  \item \textbf{WriteMem:} Write the memory of a specified node.
-  \item \textbf{ComponentLookup:} Lookup the the unique component identifier on a specified node.
-\end{itemize}
+\def\svgwidth{\columnwidth}
+\begin{figure}
+\includesvg{system}
+\caption{Abstracted System}
+\label{img_system}
+\end{figure}
+
+As said earlier, components in the simulated system are executed concurrently, and communicate with each other through messaging.
+Because multiple components can send messages to one component, all component have a message queue.
+During one \emph{tick} of the simulator, all components will be executed concurrently, being passed the content that's at the head of the message queue.
+If the message queue of a component is empty, a component will be executed with a \emph{null} message.
+If required, a component can tell the simulator that it does not want to receive these \emph{null} messages; meaning that the component will not be executed for those simulator ticks when its message queue is empty.
+
+\subsection{OS Component Descriptions}
+Components of the simulated system are, like the simulator core, also described in the functional language Haskell.
+This means that each component is described as a function.
+In case of SoOSiM, such a function is not a simple algebraic function, but a function executed within the context of the simulator.
+The Haskell parlance for this context is called a Monad, a concept originating from category theory.
+Because the function is executed within the monadic context, it can have side-effects such as sending messages to other components, or reading the memory the local memory.
+In addition, the function can be temporarily suspended at (almost) any point in the code.
+We need to be able to suspend the execution of a function so we can emulate synchronous messaging between components.
+
+We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{SimEvent}.
+The result of this function will be the (potentially updated) internal state.
+We thus have the following type signature for a component:
+\begin{code}
+component :: s -> SimEvent -> SimM s
+\end{code}
+The \hs{SimM} annotation means that this function is executed within the monadic context of the simulator.
+
+% Components have several functions at their disposal to communicate with the simulator:
+% \begin{itemize}
+%   \item \textbf{CreateNode:} Creating a new computing node.
+%   \item \textbf{CreateComponent:} Instantiate a component on a specified node.
+%   \item \textbf{Invoke:} Send a message to another component, and wait for the answer.
+%   \item \textbf{InvokeAsync:} Send a message to another component, and register a callback to handle the response.
+%   \item \textbf{ReadMem:} Read the memory of a specified node.
+%   \item \textbf{WriteMem:} Write the memory of a specified node.
+%   \item \textbf{ComponentLookup:} Lookup the the unique component identifier on a specified node.
+% \end{itemize}
 
 \section{Embedded Programming Environment}
-
+\label{sec_embedded_programming_environment}
 
 \begin{program}
 \begin{code}
@@ -123,11 +168,14 @@ fib = fix $ \f ->
 \end{program}
 
 \section{Related Work}
+\label{sec_related_work}
 CλaSH\cite{eemcs18376}.
 
 \section{Conclusions}
+\label{sec_conclusions}
 
 \section{Future Work}
+\label{sec_future_work}
 
 \bibliographystyle{IEEEtran}
 \bibliography{waters2012}

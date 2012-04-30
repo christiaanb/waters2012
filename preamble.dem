@@ -3,7 +3,8 @@
 \newcommand\textlambda{\ensuremath{\lambda}}
 
 % Support for graphics
-\usepackage{graphics}
+\usepackage[pdftex]{graphicx}
+\usepackage{color}
 
 % URL Formatting
 \usepackage{url}
@@ -20,6 +21,15 @@
 \executeiffilenewer{#1.lhs}{#1.tex}%
 {lhs2TeX -v --poly #1.lhs > #1.tex}%
 \input{#1.tex}%
+}
+
+
+\usepackage{import}
+
+\newcommand{\includesvg}[1]{%
+\executeiffilenewer{images/#1.svg}{images/#1.pdf}%
+{inkscape -z --file=images/#1.svg --export-pdf=images/#1.pdf --export-latex}%
+\import{images/}{#1.pdf_tex}%
 }
 
 % New caption environment for code listings
