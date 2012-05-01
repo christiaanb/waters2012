@@ -13,7 +13,7 @@
    height="263"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.1 "
+   inkscape:version="0.48.0 r9654"
    sodipodi:docname="system.svg">
   <defs
      id="defs4" />
@@ -33,7 +33,7 @@
      inkscape:window-width="1102"
      inkscape:window-height="599"
      inkscape:window-x="0"
-     inkscape:window-y="3"
+     inkscape:window-y="22"
      inkscape:window-maximized="0"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -83,7 +83,7 @@
          sodipodi:role="line"
          id="tspan2991"
          x="84"
-         y="73.076469">node 1</tspan></text>
+         y="73.076469">node (\#0)</tspan></text>
     <rect
        ry="13.281672"
        rx="10"
@@ -103,7 +103,7 @@
          y="73.076469"
          x="244"
          id="tspan2990"
-         sodipodi:role="line">node 2</tspan></text>
+         sodipodi:role="line">node (\#1)</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:1.15246141"
        id="rect2992"
@@ -123,7 +123,7 @@
          sodipodi:role="line"
          x="404"
          y="73.076469"
-         id="tspan2998">node 3</tspan></text>
+         id="tspan2998">node (\#2)</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.93897855"
        id="rect3002"
@@ -136,14 +136,14 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="76.633926"
+       x="68.633926"
        y="117.4375"
        id="text3004"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3006"
-         x="76.633926"
-         y="117.4375">Thread 0</tspan></text>
+         x="68.633926"
+         y="117.4375">Thread (\#0)</tspan></text>
     <rect
        ry="10.014238"
        rx="8.8042717"
@@ -176,14 +176,14 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="72.633926"
+       x="54.633926"
        y="227.4375"
        id="text3016"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3018"
-         x="72.633926"
-         y="227.4375">Scheduler</tspan></text>
+         x="54.633926"
+         y="227.4375">Scheduler (\#5)</tspan></text>
     <rect
        ry="10.014238"
        rx="8.8042717"
@@ -197,13 +197,13 @@
        sodipodi:linespacing="125%"
        id="text3022"
        y="117.4375"
-       x="236.63393"
+       x="228.63393"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
        xml:space="preserve"><tspan
          y="117.4375"
-         x="236.63393"
+         x="228.63393"
          id="tspan3024"
-         sodipodi:role="line">Thread 1</tspan></text>
+         sodipodi:role="line">Thread (\#1)</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.93897855"
        id="rect3032"
@@ -216,25 +216,25 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="398.63391"
+       x="390.63391"
        y="117.4375"
        id="text3034"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan3036"
-         x="398.63391"
-         y="117.4375">Thread 2</tspan></text>
+         x="390.63391"
+         y="117.4375">Thread (\#2)</tspan></text>
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="78.0625"
+       x="60.0625"
        y="182.58035"
        id="text3054"
        sodipodi:linespacing="125%"><tspan
          id="tspan3056"
          sodipodi:role="line"
-         x="78.0625"
-         y="182.58035">Manager</tspan></text>
+         x="60.0625"
+         y="182.58035">Manager (\#2)</tspan></text>
     <rect
        ry="10.014238"
        rx="8.8042717"
@@ -355,13 +355,13 @@
        sodipodi:linespacing="125%"
        id="text3126"
        y="182.58035"
-       x="238.0625"
+       x="220.0625"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
        xml:space="preserve"><tspan
          y="182.58035"
-         x="238.0625"
+         x="220.0625"
          sodipodi:role="line"
-         id="tspan3128">Manager</tspan></text>
+         id="tspan3128">Manager (\#3)</tspan></text>
     <rect
        ry="10.014238"
        rx="8.8042717"
@@ -385,13 +385,13 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="398.0625"
+       x="380.0625"
        y="182.58035"
        id="text3136"
        sodipodi:linespacing="125%"><tspan
          id="tspan3138"
          sodipodi:role="line"
-         x="398.0625"
-         y="182.58035">Manager</tspan></text>
+         x="380.0625"
+         y="182.58035">Manager (\#4)</tspan></text>
   </g>
 </svg>

@@ -38,7 +38,7 @@
 \newfloat{programlisting}{ht}{lop}
 \floatname{programlisting}{Listing}
 
-\newenvironment{program}{\begin{programlisting}\mathindent1em\numbersreset}{\vspace{-0.5em}\end{programlisting}}
+\newenvironment{program}{\begin{programlisting}\mathindent0em\numberson\numbersreset}{\vspace{-0.5em}\end{programlisting}}
 
 \usepackage{cite}
 

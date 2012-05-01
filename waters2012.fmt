@@ -5,3 +5,4 @@
 %subst blankline = "\printlineend\\[\blanklineskip]%'n\printlinebegin"
 
 %format :-> = "\twoheadrightarrow"
+%format ^^  = "\ \ \ \ "
