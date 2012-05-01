@@ -236,6 +236,7 @@ Our methodology consists of two important aspects:
   \item Defining different interpretations for such an application description, allowing a developer to observe different aspects of the execution of the application.
 \end{itemize}
 
+\subsection{Embedded Languages}
 An embedded language is a language that can be used from within another language or application.
 The language that is embedded is called the \emph{object} language, and the language in which is \emph{object} language is embedded is called the \emph{host} language.
 Because the \emph{object} language is embedded, the \emph{host} language has complete control of any terms/expressions defined within this \emph{object} language.
@@ -256,7 +257,7 @@ To make this idea more concrete, we present the recursive Fibbonaci function, de
 %format seq = "\mathbf{seq}"
 %format `seq` = "\ `\mathbf{seq}`\ "
 \begin{code}
-fib :: repr (IntT :-> IntT)
+fib :: Symantics repr => repr (IntT :-> IntT)
 fib = fix $ \f ->
   fun $ \n ->
     nv 0 $ \n1 ->
@@ -277,7 +278,9 @@ fib = fix $ \f ->
 All functions printed in \textbf{bold} are language constructs in our \emph{embedded} language.
 Additionally the \hs{=:} operator is also one of our \emph{embedded} language construct; the numeric operators and literals are also overloaded to represent embedded terms.
 To give some insight as to how Listing~\ref{lst_fib} represents the recursive Fibbonaci function, we quickly elaborate each of the lines.
-Line 2 creates a fixed-point over \hs{f}, making the recursion explicit.
+
+The type annotation on line 1 tells us that we have an function defined at the \emph{object}-level with an \emph{object}-level integer as argument and an \emph{object}-level integer as result.
+Line 2 creates a fixed-point over \hs{f}, making the recursion of our embedded Fibbonaci function explicit.
 On line 3 we define a function parameter \hs{n} using the \hs{fun} construct.
 Note that we use Haskell binders to represent binders in our \emph{embedded} language.
 On line 4-6 we introduce three mutable references, all having the initial integer value of 0.
@@ -285,35 +288,69 @@ We assign the value of \hs{n} to the mutable reference \hs{n1} on line 7.
 On line 8 we check if the derefenced value of \hs{n1} is less than 2; if so we return 1 (line 9); otherwise we assign the value of the recursive call of \hs{f} with \hs{(n1 - 1)} to \hs{n2}, and assign the value of the recursive call of \hs{f} with \hs{(n1 - 2)} to \hs{n3}.
 We subsequently return the addition of the dereferenced variables \hs{n2} and \hs{n3}.
 
-We must confess that there is some syntactic overhead as a result of using Haskell functions and datatypes to specify the language constructs of our \emph{embedded} language.
+We must confess that there is some syntactic overhead as a result of using Haskell functions and datatypes to specify the language constructs of our \emph{embedded} language; as opposed to using a string representation.
 However, we have consequently saved ourselves from many implementation burdens associated with embedded languages:
 \begin{itemize}
-  \item We do not have to create our own parser
+  \item We do not have to create a parser for our language.
   \item We can use Haskell bindings to represent bindings in our own language, avoiding the need to deal with such 'tricky' concepts as free variables and capture-free substitution.
-  \item We can use Haskell's type system to represent types in our embedded language: meaning we can use Haskell's type-checker to check expressions defined in our embedded language.
+  \item We can use Haskell's type system to represent types in our embedded language: meaning we can use Haskell's type-checker to check expressions defined in our own embedded language.
 \end{itemize}
 
-% \begin{program}
-% \begin{code}
-% class Symantics repr where
-%   fun   :: (repr a -> repr b) -> repr (a :-> b)
-%   app   :: repr (a :-> b) -> repr a -> repr b
-%   fix   :: (repr a -> repr a) -> repr a
+\subsection{Interpreting an Embedded Language}
+We mentioned the concept of \emph{type-classes} when we discussed how to include a component description in the simulator.
+Following the \emph{final tagless}\cite{final_tagless_embedding} encoding of embedded languages in Haskell, we use a type-class to define the language constructs of our mini functional language with mutable references.
+A partial specification of the \hs{Symantics} (a pun on \emph{syntax} and \emph{semantics}) type-class, defining our \emph{embedded language}, is shown in Listing~\ref{lst_embedded_language_interface}.
 
-%   int   :: repr Int -> repr IntT
-%   sub   :: repr IntT -> repr IntT -> repr IntT
+\begin{program}
+\begin{code}
+class Symantics repr where
+  fun  :: (repr a -> repr b) -> repr (a :-> b)
+  app  :: repr (a :-> b) -> repr a -> repr b
+\end{code}
+$\ \ \ .\ .\ .$
+\begin{code}
+^^ drf   :: repr (Ref a) -> repr a
+^^ (=:)  :: repr (Ref a) -> repr a -> repr Void
+\end{code}
+\caption{Embedded Language - Partial Definition}
+\label{lst_embedded_language_interface}
+\end{program}
 
-%   if_   :: repr BoolT -> repr a -> repr a -> repr a
-%   lt    :: repr IntT -> repr IntT -> repr BoolT
+We read the types of our language definition constructs as follows:
+\begin{itemize}
+  \item \hs{fun} takes a \emph{host}-level function from \hs{object}-type \hs{a} to \hs{object}-type \hs{b}, and returns an \emph{object}-level function from \hs{a} to \hs{b}.
+  \item \hs{app} takes an \emph{object}-level function from \hs{a} to \hs{b}, and applies this function to an \emph{object}-term of type \hs{a}, returning an \emph{object}-term of type \hs{b}.
+  \item \hs{drf} dereferences an \hs{object}-term of type "reference of" \hs{a}, returning an \emph{object}-term of type \hs{a}.
+  \item \hs{(=:)} is operator that updates an \emph{object}-term of type "reference of" \hs{a}, with a new \emph{object}-value of type \hs{a}, returning an \emph{object}-term of type \hs{Void}.
+\end{itemize}
 
-%   nv    :: repr a -> (repr (Ref a) -> repr b) -> repr b
-%   drf   :: repr (Ref a)
-%   (=:)  :: repr (Ref a) -> exp a -> exp Void
-%   seq   :: repr a -> repr b -> repr b
-% \end{code}
-% \caption{Embedded language interface}
-% \label{lst:genpredfunc}
-% \end{program}
+To give a desired interpretation of an application described in our embedded language we simply have to implement an instance of the \hs{Symantics} type-class.
+These interpretations include pretty-printing the description, determining the size of expression, evaluating the description as if it were a normal Haskell function, etc.
+
+In the context of this paper we are however interested in \emph{observing} (specific parts of) the execution of an application described in our newly created embedded language.
+As a running example, we show part of an instance definition that observes the invocations of the memory manager upon dereferencing and updating mutable references:
+
+\begin{program}
+\begin{code}
+newtype MemAccess = M { unM :: SimM }
+
+instance Symantics MemAccess where
+  ...
+
+  drf x = M $ do
+    i     <- ...  x  ...
+    mmId  <- componentLookup "MemoryManager"
+    invoke mmId (marshal (Read i))
+
+  x =: y = M $ do
+    i     <- ...  x  ...
+    v     <- ...  y  ...
+    mmId  <- componentLookup "MemoryManager"
+    invoke mmId (mashal (Write i v))
+\end{code}
+\caption{Observing Memory Access}
+\label{lst_observing_memory_access}
+\end{program}
 
 \section{Related Work}
 \label{sec_related_work}
@@ -331,3 +368,5 @@ The authors would like to thank Ivan Perez for the design and implementation of 
 \bibliography{waters2012}
 
 \end{document}
+
+
