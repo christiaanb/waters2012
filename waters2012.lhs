@@ -26,7 +26,7 @@ The simulator provides a highly abstracted view of a computing system, consistin
 OS modules are subsequently modelled as components that progress as a result of reacting to two types of events: messages from other components, or a system-wide tick event.
 Using this abstract view, a developer can quickly formalize assertions regarding the interaction between operating system modules and applications.
 
-On top of SoOSiM a methodology was developed that allows the precise control of the interaction between an application and the operating system within the simulated environment.
+We developed methodology on top of SoOSiM that allows precise control of the interaction between a simulated application and the operating system.
 Embedded languages are used to model the application once, and different interpretations of the embedded language constructs are used to observe specific aspects on application's execution.
 The combination of SoOSim and embedded languages facilitates the exploration of programming language concepts and their interaction with the operating system.
 \end{abstract}
@@ -97,7 +97,7 @@ In case of SoOSiM, such a function is not a simple algebraic function, but a fun
 The Haskell parlance for such a computational context is a \emph{Monad}, the term we will use henceforth.
 Because the function is executed within the monad, it can have \emph{side-effects} such as sending messages to other components, or reading the memory of a local memory.
 In addition, the function can be temporarily suspended at (almost) any point in the code.
-We need to be able to suspend the execution of a function so that we may emulate synchronous messaging between components, a subject we will return to later.
+SoOSiM needs to be able to suspend the execution of a function so that it may emulate synchronous messaging between components, a subject we will return to later.
 
 We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{SimEvent}.
 The result of this function will be the (potentially updated) internal state.
@@ -109,7 +109,7 @@ Values of type \hs{SimEvent} can either be:
 We thus have the following type signature for a component:
 \numbersoff
 \begin{code}
-component :: s -> SimEvent -> SimM s
+component :: state -> SimEvent -> SimM state
 \end{code}
 The \hs{SimM} annotation means that this function is executed within the simulator monad.
 The user-defined internal state can be used to store any information that needs to perpetuate across simulator \emph{ticks}.
@@ -118,21 +118,23 @@ To include a component description in the simulator, the developer will have to 
 A \emph{type-class} in Haskell can be compared to an interface definition as those known in object-oriented languages.
 An \emph{instance} of a \emph{type-class} is a concrete instantiation of such an interface.
 The \hs{ComponentIface} requires the instantiation of the following values to completely define a component:
+
 \begin{itemize}
   \item The initial internal state of the component.
   \item The unique name of the component.
   \item The monadic function describing the behaviour of the component.
 \end{itemize}
 
+Note that we are aiming at a high level of abstraction for the behavioural descriptions of our OS modules, where the focus is mainly on the interaction with other OS modules an application threads.
+
 \subsection{Interaction with the simulator}
 Components have several functions at their disposal to interact with the simulator and consequently interact with other components.
-All functions must be executed within the monadic context of the simulator.
-The API is as follows:
-\paragraph{\hs{registerComponent}}
-Register a component definition with the simulator.
-This means that an \emph{instance} of the \hs{CompIface} for this component must be defined.
+The function enabling interaction with the simulator are the following:
+% \paragraph{\hs{registerComponent}}
+% Register a component definition with the simulator.
+% This means that an \emph{instance} of the \hs{CompIface} for this component must be defined.
 \paragraph{\hs{createComponent}}
-Instantiate a new component on a specified node; the component definition must be registered with the simulator.
+Instantiate a new component on a specified node. %; the component definition must be registered with the simulator.
 \paragraph{\hs{invoke}}
 Send a message to another component, and wait for the answer.
 This means that whenever a component uses this function it will be (temporarily) suspended by the simulator.
@@ -151,18 +153,18 @@ Read at a specified address of a node's local memory.
 \paragraph{\hs{writeMem}}
 Write a new value at a specified address of a node's local memory.
 \paragraph{\hs{componentLookup}}
-Lookup the the unique identifier for a component on a specified node.
-Components have two unique identifiers, a global \emph{name} (as specified in the \hs{CompIface} instance), and a \hs{ComponentId} that is a unique number corresponding to a specific instance of a component.
+Lookup the unique identifier of a component on a specified node.
+Components have two unique identifiers, their global \emph{name} (as specified in the \hs{CompIface} instance), and a \hs{ComponentId} that is a unique number corresponding to a specific instance of a component.
 When you want to \emph{invoke} a component, you need to know the unique \hs{ComponentId} of the specific instance.
-To give a concrete example, using the system of Figure~\ref{img_system} as our context: \emph{Thread(2)} wants to invoke the instance of the \emph{Memory Manager} that is running on the same node (\#2).
-As \hs{Thread(2)} was not involved with the instantiation of that OS module, it has no idea what the specific \hs{ComponentId} of the memory manager on node \#2 is.
-It does however know the unique global name of all memory managers, so it can use the \hs{componentLookup} function to find the \hs{Memory Manager} with ID \#4 that is running on node \#2.
+To give a concrete example, using the system of Figure~\ref{img_system} as our context: \emph{Thread(\#6)} wants to invoke the instance of the \emph{Memory Manager} that is running on the same node (\#2).
+As \hs{Thread(\#6)} was not involved with the instantiation of that OS module, it has no idea what the specific \hs{ComponentId} of the memory manager on node \#2 is.
+It does however know the unique global name of all memory managers, so it can use the \hs{componentLookup} function to find the \hs{Memory Manager} with ID \#5 that is running on node \#2.
 
 \subsection{Example OS Component: Memory Manager}
 This subsection demonstrates the use of the simulator API, taking the \hs{Read} code-path of the memory manager OS module as an example.
 In our case the memory manager takes care that the reads or writes of a global address end up in the correct node local memory.
 As part of its internal state the memory manager keeps a lookup table.
-This lookup table states whether an address range belongs to the local memory of the node that hosts the memory manager, or if that address is handled by a memory manager on another node.
+This lookup table states whether an address range belongs to the local memory of the node that hosts the memory manager, or whether that address is handled by a memory manager on another node.
 An entry of the lookup table has the following datatype:
 \begin{code}
 data Entry = EntryC
@@ -178,13 +180,13 @@ If the value of \hs{scrId} is \hs{Nothing} the address is hosted on the node's l
 Listing~\ref{lst_read_logic_memory_manager} shows the Haskell code for the read-logic of the memory manager.
 Lines 1 and 2 show the type signature of the function defining the behaviour of the memory manager.
 On line 3 we use pattern-matching, to match on a \hs{Message} event, binding the values of the ComponentId of the caller, and the message content, to \hs{caller} and \hs{content} respectively.
-Because components can send any type of message to the memory manager, including types we do not expect, we unmarshal the message content on line 4, and only continue if it is a \hs{Read} message.
+Because components can send any type of message to the memory manager, including types we do not expect, we \hs{unmarshal} the message content on line 4, and only continue when it is a \hs{Read} message (indicated by the vertical bar \hs{|}).
 If it is a \hs{Read} message, we bind the value of the address to the name \hs{addr}.
 On line 6 we lookup the address range entry which encompasses \hs{addr}.
 Line 7 starts a \hs{case}-statement discriminating on the value of the \hs{srcId} of the entry.
 If the \hs{srcId} is \hs{Nothing} (line 8-11), we read the node's local memory using the \hs{readAddr} function, \hs{respond} to the caller with the read value, and finally \hs{yield} to the simulator.
 When the address range is handled by a \hs{remote} memory manager (line 12-15), we \hs{invoke} that specific memory manager module with the read request and wait for a response.
-Note that many simulator cycles might pass between the invocation and the return, as the \hs{remote} memory manager might be processing many requests.
+We remark that many simulator cycles might pass between the invocation and the return, as the \hs{remote} memory manager might be processing many requests.
 Once we receive the value from the \hs{remote} memory manager, we \hs{respond} to the original caller forwarding the received value.
 \begin{program}
 \begin{code}
@@ -203,6 +205,9 @@ memoryManager s (Message caller content)
          response <- invoke remote content
          respond caller response
          yield s
+  | (Write addr val) <- unMarshal content
+  = do
+    ...
 \end{code}
 \caption{Read logic of the Memory Manager}
 \label{lst_read_logic_memory_manager}
@@ -216,7 +221,7 @@ Different colours indicate whether a component is active, waiting for a response
 The \emph{Component Info} box shows static and statistical information regarding a selected component.
 Several statistics are collected by the simulator, including the number of simulation cycles spend in a certain state (active / idle / waiting), messages send and received, etc.
 
-These statistic can be used to roughly evaluate the performance bottlenecks in a system.
+These statistics can be used to roughly evaluate the performance bottlenecks in a system.
 For example, when OS module 'A' has mostly active cycles, and components 'B'-'Z' are mostly waiting, one can check if components 'B'-'Z' were indeed communicating with 'A'.
 If this happens to be the case, then 'A' is indeed a bottleneck in the system.
 A general indication of a well performing system is when OS modules have many \emph{idle} cycles, while application threads should have many \emph{active} cycles.
@@ -229,8 +234,8 @@ A general indication of a well performing system is when OS modules have many \e
 
 \section{Embedded Programming Environment}
 \label{sec_embedded_programming_environment}
-One of the reasons to develop SoOSiM is to observe the interaction between applications and operating system.
-Additionally, we want to explore new programming language concepts intended for parallel and concurrent programming, and how they impact the operating system.
+One of the reasons to develop SoOSiM is to observe the interaction between applications and the operating system.
+Additionally, we want to explore programming language concepts intended for parallel and concurrent programming, and how they impact the operating system.
 For this purpose we have developed a methodology on top of SoOSiM, that uses embedded languages to specify the application.
 Our methodology consists of two important aspects:
 
@@ -241,8 +246,8 @@ Our methodology consists of two important aspects:
 
 \subsection{Embedded Languages}
 An embedded language is a language that can be used from within another language or application.
-The language that is embedded is called the \emph{object} language, and the language in which is \emph{object} language is embedded is called the \emph{host} language.
-Because the \emph{object} language is embedded, the \emph{host} language has complete control of any terms/expressions defined within this \emph{object} language.
+The language that is embedded is called the \emph{object} language, and the language in which the \emph{object} language is embedded is called the \emph{host} language.
+Because the \emph{object} language is embedded, the \emph{host} language has complete control over any terms / expressions defined within this \emph{object} language.
 There are multiple ways of representing embedded languages, for example as a string, which must subsequently be parsed within the \emph{host} language.
 
 Haskell has been used to host many kinds of embedded (domain-specific) languages\cite{haskell_embedded}.
@@ -282,7 +287,7 @@ All functions printed in \textbf{bold} are language constructs in our \emph{embe
 Additionally the \hs{=:} operator is also one of our \emph{embedded} language construct; the numeric operators and literals are also overloaded to represent embedded terms.
 To give some insight as to how Listing~\ref{lst_fib} represents the recursive Fibonacci function, we quickly elaborate each of the lines.
 
-The type annotation on line 1 tells us that we have an function defined at the \emph{object}-level with an \emph{object}-level integer as argument and an \emph{object}-level integer as result.
+The type annotation on line 1 tells us that we have a function defined at the \emph{object}-level (\hs{:->}) with an \emph{object}-level integer (\hs{IntT}) as argument and an \emph{object}-level integer (IntT) as result.
 Line 2 creates a fixed-point over \hs{f}, making the recursion of our embedded Fibonacci function explicit.
 On line 3 we define a function parameter \hs{n} using the \hs{fun} construct.
 Note that we use Haskell binders to represent binders in our \emph{embedded} language.
@@ -374,9 +379,9 @@ Again, we can hook up such an interpretation to our simulator monad, and observe
 
 \section{Related Work}
 \label{sec_related_work}
-COTSon\cite{cotson} is a full system simulator, using SimNow to simulate the processor architecture.
+COTSon\cite{cotson} is a full system simulator, using an emulator (such as SimNow) for the processor architecture.
 It allows a developer to execute normal x86-code in a simulated environment.
-COTSon is far too detailed for our needs, and does facilitate the exploration of complete operating system concepts.
+COTSon is far too detailed for our needs, and does not facilitate the easy exploration of complete operating system concepts.
 
 OMNeT++\cite{omnet} is a C++-based discrete even simulator for modelling distributed or parallel system.
 Compared to SoOSiM, OMNeT++ does not allow the straightforward creation of new modules meaning the topology of a system is static.
@@ -393,12 +398,12 @@ The approach used in Barrelfish is however to create parsers for their embedded 
 \label{sec_conclusions}
 Although the SoOSiM simulator is still considered work in progress, it has already allowed us to formalize the interactions between the different OS modules devised within the S(o)OS\cite{soos} project.
 We believe that this is the strength of our simulator's approach: the quick exploration and formalization of system concepts.
-Fast exploration is achieved by the highly abstracted view of the hardware/system platform.
+Fast exploration is achieved by the highly abstracted view of SoOSiM on the hardware / system.
 However, having to actually program all our OS modules forces us to formalize the interactions within the system; exposing many potential flaws not discovered by an informal (text-based) description of the operating system.
 
 Using embedded languages to program applications that run in our simulated environment, we attain complete control of it's execution.
 By using specific interpretations of our embedded language, we can easily observe specific parts (such as memory access) of an application's execution.
-Using Haskell functions to specify our embedded language constructs, saves us from a high implementation burden usually associated with the tools/compilers for programming languages.
+Using Haskell functions to specify our embedded language constructs saves us from a high implementation burden usually associated with the creation of the tools / compilers for programming languages.
 
 \section{Future Work}
 \label{sec_future_work}
