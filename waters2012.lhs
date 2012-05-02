@@ -21,55 +21,58 @@ Email: \url{{c.p.r.baaij;j.kuper}@@utwente.nl}}
 
 \begin{abstract}
 \boldmath
-SoOSiM is a simulator developed for the purpose of exploring new operating system concepts and operating system modules.
+SoOSiM is a simulator developed for the purpose of exploring operating system concepts and operating system modules.
 The simulator provides a highly abstracted view of a computing system, consisting of computing nodes, and components that are concurrently executed on these nodes.
 OS modules are subsequently modelled as components that progress as a result of reacting to two types of events: messages from other components, or a system-wide tick event.
 Using this abstract view, a developer can quickly formalize assertions regarding the interaction between operating system modules and applications.
 
-On top of SoOSiM a methodology was developed that allows the precise control of the interaction between simulated application and simulated operating system.
-Embedded languages are used to model the application, and ad-hoc polymorphism is used to give different interpretations to the same application description.
-The combination of SoOSim and embedded languages facilitates the exploration of new programming language concepts and their interaction with the operating system.
+On top of SoOSiM a methodology was developed that allows the precise control of the interaction between an application and the operating system within the simulated environment.
+Embedded languages are used to model the application once, and different interpretations of the embedded language constructs are used to observe specific aspects on application's execution.
+The combination of SoOSim and embedded languages facilitates the exploration of programming language concepts and their interaction with the operating system.
 \end{abstract}
 
 \section{Introduction}
-Simulation is commonly used tool in the exploration of many design aspects of a system: ranging from feasibility aspects to gathering performance information.
-However, when tasked with the creation of new operating system concepts, and their interaction with the programmability of large-scale systems, many simulation packages do not seem to have the right abstractions for fast exploration.
+Simulation is a commonly used tool in the exploration of many design aspects of a system: ranging from feasibility aspects to gathering performance information.
+However, when tasked with the creation of new operating system concepts, and their interaction with the programmability of large-scale systems, existing simulation packages do not seem to have the right abstractions for fast design exploration\cite{cotson,omnet} (ref. Section~\ref{sec_related_work}).
 The work we present in this paper has been created in the context of the S(o)OS project\cite{soos}.
-The S(o)OS project aims to research OS concepts and specific OS modules, that aid in scalability of the complete software stack (both OS and application) for future many-core systems.
-One of the key concepts in S(o)OS is that only those OS modules needed by a thread are loaded into the (local) memory of a core/cpu on which the thread is executed.
-This execution environment differs from contemporary OS' where every core runs a complete copy of the (monolithic) operating system.
+The S(o)OS project aims to research OS concepts and specific OS modules, which aid in scalability of the complete software stack (both OS and application) on future many-core systems.
+One of the key concepts in S(o)OS is that only those OS modules needed by a thread, are actually loaded into the (local) memory of a core/cpu on which the thread will run.
+This execution environment differs from contemporary operating systems where every core runs a complete copy of the (monolithic) operating system.
 
-A basic requirement that we have towards any simulator, is thus the ability to easily create application threads and OS modules.
-Aside from the fact that the system will be dynamic as a result of loading OS modules on-the-fly; large-scale systems are also tend to be dynamic in the sense that computing nodes can (permanently) disappear, or even appear.
+A basic requirement that we thus have towards any simulator, are the facilities to straightforwardly simulate the instantiation of application threads and OS modules.
+Aside from the fact that the S(o)OS-envisioned system will be dynamic as a result of loading OS modules on-the-fly; large-scale systems also tend to be dynamic in the sense that computing nodes can (permanently) disappear (failure), or appear (hot-swap).
 Hence, we also require that our simulator facilitates the straightforward creation and destruction of computing elements.
-Our current needs for a simulator rest mostly in formalizing our ideas, and examining the interaction between OS modules and application threads.
-As such, being able to extract highly accurate performance figures is not required.
-We do however wish to be able to observe all interactions among applications threads and OS modules.
+Our current need for a simulator rests mostly in formalizing the S(o)OS concept, and examining the interaction between our envisioned OS modules and the application threads.
+As such, being able to extract highly accurate performance figures from a simulated system is not a key requirement.
+We do however wish to be able to observe all interactions among application threads and OS modules.
 Additionally, we wish to be able to \emph{zoom in} on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
 
 This paper describes a new simulator, \emph{SoOSiM}, that meets the above requirements.
-We elaborate on the main concepts of the simulator in Section~\ref{sec_soosim}, and show how OS modules interact with each other, and the simulator.
+We elaborate on the main concepts of the simulator in Section~\ref{sec_soosim}, and show how OS modules interact with each other, and with the simulator.
 In Section~\ref{sec_embedded_programming_environment} we describe the use of embedded languages for creation of applications running in the simulated environment.
 The simulation engine, the graphical user interface, and embedded language environment are all written in the functional programming language Haskell\cite{haskell98};
 this means that all code listings in this paper will also show Haskell code.
-We will compare \emph{SoOSiM} to other approaches in Section~\ref{sec_related_work}.
-We enumerate our experiences with the simulator in Section~\ref{sec_conclusions}, and list potential future work in Section~\ref{sec_future_work}
+Due to limitation in the number of pages, we will not be able to elaborate every Haskell notation; the code examples are used to demonstrate that the presented concepts have an actual implementation.
+We will compare \emph{SoOSiM} to existing simulation frameworks, and list other related work in Section~\ref{sec_related_work}.
+We enumerate our experiences with SoOSiM in Section~\ref{sec_conclusions}, and list potential future work in Section~\ref{sec_future_work}
 
 \section{Abstract System Simulator}
 \label{sec_soosim}
 The purpose of SoOSiM is mainly to provide a platform that allows a developer to observe the interactions between OS modules and application threads.
 It is for this reason that we have chosen to make the simulated hardware as abstract as possible.
 In SoOSiM, the hardware platform is described as a set of nodes.
-Each \emph{node} represents a physical computing object; such as a core, complete CPU, memory controller, etc.
+Each \emph{node} represents a physical computing object: such as a core, complete CPU, memory controller, etc.
 Every node has a local memory of potentially infinite size.
-The connectivity between nodes is not explicitly modelled.
+The layout and connectivity properties of the nodes are not part of the system description.
+If such a level of detail is required it would have to be modelled explicitly by the user.
 
 Each \emph{node} hosts a set of components.
-A \emph{components} represents an executable object; such as a thread, application, OS module, etc.
+A \emph{component} represents an executable object; such as a thread, application, OS module, etc.
 Components communicate with each other using either direct messaging, or through the local memory of a node.
 Having both explicit messaging, and shared memories, SoOSiM supports the two well known methods of communication.
+Because multiple components can send messages to one component, all component have a message queue.
 All components in a simulated system, even those hosted within the same node, are executed concurrently.
-The simulator poses no restrictions on which components can communicate with each other, nor to which local memory they can read form and write to.
+The simulator poses no restrictions as to which components can communicate with each other, nor to which node local memory they can read from and write to.
 A user of SoOSiM would have to model those restrictions explicitly if required.
 A schematic overview of example system can be seen in Figure~\ref{img_system}.
 
@@ -78,23 +81,23 @@ A schematic overview of example system can be seen in Figure~\ref{img_system}.
 \includesvg{system}
 \caption{Abstracted System}
 \label{img_system}
+\vspace{-2em}
 \end{figure}
 
-As said earlier, components in the simulated system are executed concurrently, and communicate with each other through messaging.
-Because multiple components can send messages to one component, all component have a message queue.
-During one \emph{tick} of the simulator, all components will be executed concurrently, being passed the content that's at the head of the message queue.
+The simulator progresses all components concurrently in one discrete step called a \hs{tick}.
+During a \emph{tick}, the simulator passes the content that is at the head of the message queue of each individual component.
 If the message queue of a component is empty, a component will be executed with a \emph{null} message.
-If required, a component can tell the simulator that it does not want to receive these \emph{null} messages.
-When a component has no messages to process it will not be executed by the simulator.
+If desired, a component can inform the simulator that it does not want to receive these \emph{null} messages.
+In that case the component will not be executed by the simulator.
 
 \subsection{OS Component Descriptions}
 Components of the simulated system are, like the simulator core, also described in the functional programming language Haskell.
 This means that each component is described as a function.
 In case of SoOSiM, such a function is not a simple algebraic function, but a function executed within the context of the simulator.
-The Haskell parlance for this context is called a Monad, a concept originating from category theory.
-Because the function is executed within the monadic context, it can have side-effects such as sending messages to other components, or reading the memory of a local memory.
+The Haskell parlance for such a computational context is a \emph{Monad}, the term we will use henceforth.
+Because the function is executed within the monad, it can have \emph{side-effects} such as sending messages to other components, or reading the memory of a local memory.
 In addition, the function can be temporarily suspended at (almost) any point in the code.
-We need to be able to suspend the execution of a function so we can emulate synchronous messaging between components, a subject we will return to later.
+We need to be able to suspend the execution of a function so that we may emulate synchronous messaging between components, a subject we will return to later.
 
 We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{SimEvent}.
 The result of this function will be the (potentially updated) internal state.
@@ -108,9 +111,8 @@ We thus have the following type signature for a component:
 \begin{code}
 component :: s -> SimEvent -> SimM s
 \end{code}
-The \hs{SimM} annotation means that this function is executed within the monadic context of the simulator.
-The user-defined internal state can be used to store any information that needs to perpetuate across simulator ticks.
-The simulator takes care that a component is executed with its unique local state every tick.
+The \hs{SimM} annotation means that this function is executed within the simulator monad.
+The user-defined internal state can be used to store any information that needs to perpetuate across simulator \emph{ticks}.
 
 To include a component description in the simulator, the developer will have to create a so-called \emph{instance} of the \hs{ComponentIface} \emph{type-class}.
 A \emph{type-class} in Haskell can be compared to an interface definition as those known in object-oriented languages.
@@ -216,12 +218,13 @@ Several statistics are collected by the simulator, including the number of simul
 
 These statistic can be used to roughly evaluate the performance bottlenecks in a system.
 For example, when OS module 'A' has mostly active cycles, and components 'B'-'Z' are mostly waiting, one can check if components 'B'-'Z' were indeed communicating with 'A'.
-If this happens to be the case, then 'A' is indeed a botteneck in the system.
+If this happens to be the case, then 'A' is indeed a bottleneck in the system.
 A general indication of a well performing system is when OS modules have many \emph{idle} cycles, while application threads should have many \emph{active} cycles.
 \begin{figure*}
 \includegraphics[width=18cm]{images/gui.png}
 \caption{Simulator GUI}
 \label{fig_simulator_gui}
+\vspace{-1em}
 \end{figure*}
 
 \section{Embedded Programming Environment}
@@ -244,7 +247,7 @@ There are multiple ways of representing embedded languages, for example as a str
 
 Haskell has been used to host many kinds of embedded (domain-specific) languages\cite{haskell_embedded}.
 The standard approach in Haskell to not represent \emph{object} terms as strings, but instead use data-types and functions.
-To make this idea more concrete, we present the recursive Fibbonaci function, defined using our self-defined \emph{embedded} functional language, in Listing~\ref{lst_fib}.
+To make this idea more concrete, we present the recursive Fibonacci function, defined using our self-defined \emph{embedded} functional language, in Listing~\ref{lst_fib}.
 
 \begin{program}
 %format fun = "\mathbf{fun}"
@@ -277,22 +280,22 @@ fib = fix $ \f ->
 
 All functions printed in \textbf{bold} are language constructs in our \emph{embedded} language.
 Additionally the \hs{=:} operator is also one of our \emph{embedded} language construct; the numeric operators and literals are also overloaded to represent embedded terms.
-To give some insight as to how Listing~\ref{lst_fib} represents the recursive Fibbonaci function, we quickly elaborate each of the lines.
+To give some insight as to how Listing~\ref{lst_fib} represents the recursive Fibonacci function, we quickly elaborate each of the lines.
 
 The type annotation on line 1 tells us that we have an function defined at the \emph{object}-level with an \emph{object}-level integer as argument and an \emph{object}-level integer as result.
-Line 2 creates a fixed-point over \hs{f}, making the recursion of our embedded Fibbonaci function explicit.
+Line 2 creates a fixed-point over \hs{f}, making the recursion of our embedded Fibonacci function explicit.
 On line 3 we define a function parameter \hs{n} using the \hs{fun} construct.
 Note that we use Haskell binders to represent binders in our \emph{embedded} language.
 On line 4-6 we introduce three mutable references, all having the initial integer value of 0.
 We assign the value of \hs{n} to the mutable reference \hs{n1} on line 7.
-On line 8 we check if the derefenced value of \hs{n1} is less than 2; if so we return 1 (line 9); otherwise we assign the value of the recursive call of \hs{f} with \hs{(n1 - 1)} to \hs{n2}, and assign the value of the recursive call of \hs{f} with \hs{(n1 - 2)} to \hs{n3}.
+On line 8 we check if the dereferenced value of \hs{n1} is less than 2; if so we return 1 (line 9); otherwise we assign the value of the recursive call of \hs{f} with \hs{(n1 - 1)} to \hs{n2}, and assign the value of the recursive call of \hs{f} with \hs{(n1 - 2)} to \hs{n3}.
 We subsequently return the addition of the dereferenced variables \hs{n2} and \hs{n3}.
 
 We must confess that there is some syntactic overhead as a result of using Haskell functions and datatypes to specify the language constructs of our \emph{embedded} language; as opposed to using a string representation.
 However, we have consequently saved ourselves from many implementation burdens associated with embedded languages:
 \begin{itemize}
   \item We do not have to create a parser for our language.
-  \item We can use Haskell bindings to represent bindings in our own language, avoiding the need to deal with such 'tricky' concepts as free variables and capture-free substitution.
+  \item We can use Haskell bindings to represent bindings in our own language, avoiding the need to deal with such 'tricky' concepts as: symbol tables, free variable calculation, and capture-free substitution.
   \item We can use Haskell's type system to represent types in our embedded language: meaning we can use Haskell's type-checker to check expressions defined in our own embedded language.
 \end{itemize}
 
@@ -332,17 +335,15 @@ As a running example, we show part of an instance definition that observes the i
 
 \begin{program}
 \begin{code}
-newtype MemAccess = M { unM :: SimM }
-
-instance Symantics MemAccess where
+instance Symantics SimM where
   ...
 
-  drf x = M $ do
+  drf x = do
     i     <- ...  x  ...
     mmId  <- componentLookup "MemoryManager"
     invoke mmId (marshal (Read i))
 
-  x =: y = M $ do
+  x =: y = do
     i     <- ...  x  ...
     v     <- ...  y  ...
     mmId  <- componentLookup "MemoryManager"
@@ -352,14 +353,63 @@ instance Symantics MemAccess where
 \label{lst_observing_memory_access}
 \end{program}
 
+We explained earlier that the simulator \emph{monad} (\hs{SimM}) should be seen as a computational context in which a function is executed.
+By making our simulator monad the computational \hs{instance} (or environment) of our embedded language definition, we can now run the applications defined with our embedded language inside the SoOSiM simulator.
+Most language constructs of our embedded language will be implemented in such a way that they behave like their Haskell counterpart.
+The constructs where we made minor adjustments are the \hs{drf} and (=:) constructs, which now enact communication with our \emph{Memory Manager} OS module.
+By using the \hs{invoke} function, our application descriptions are also suspended whenever they dereference or update memory locations, as they have to wait for a response from the memory manager.
+Using the SoOSiM GUI, we can now observe the communication patterns between the applications described in our embedded language, and our newly created OS module.
+
+\subsection{Further Extensions and Interpretations}
+The use cases of embedded languages in the context of our simulation framework extend far beyond the example given in the previous subsection.
+We can for example easily extend our language definition with constructs for parallel composition, and introduce blocking mutable references for communication between threads.
+An initial interpretation (in the form of a type-class instances) could then be sequential execution, allowing for simple debugging of algorithmic bugs in the application.
+A second interpretation could then use the Haskell counterparts for parallel composition and block mutable variables to mimic an actual concurrent execution.
+A third interpretation could then interact with OS modules inside a SoOSiM simulated system, allowing a developer to observe the interaction between our new language constructs and the operating system.
+
+We said earlier that one of the interpretations of an embedded language description could be a pretty-printed string-representation.
+Following up on the idea of converting a description to a datatype, we can also interpret our application description as an abstract syntax tree or even a dependency graph.
+Such a dependency graph could then be used in another interpretation of our embedded language that facilitates the automatic parallel execution of independent sub-expressions.
+Again, we can hook up such an interpretation to our simulator monad, and observe the effects of the distribution of computation and data, as facilitated by our simulated operating system.
+
 \section{Related Work}
 \label{sec_related_work}
+COTSon\cite{cotson} is a full system simulator, using SimNow to simulate the processor architecture.
+It allows a developer to execute normal x86-code in a simulated environment.
+COTSon is far too detailed for our needs, and does facilitate the exploration of complete operating system concepts.
+
+OMNeT++\cite{omnet} is a C++-based discrete even simulator for modelling distributed or parallel system.
+Compared to SoOSiM, OMNeT++ does not allow the straightforward creation of new modules meaning the topology of a system is static.
+OMNeT++ is thus not meeting our simulation needs to dynamically instantiate new OS modules and application threads.
+
+House\cite{house} is an operating system built in Haskell; it uses a Haskell run-time system allows direct execution on bare metal.
+OS modules are executed with the \hs{Hardware} monad, comparable to our \hs{Simulator} monad, allowing direct interaction with real hardware.
+
+Barrelfish\cite{barrelfish} is an OS in which embedded languages are used, amongst other purposes, to define driver interfaces.
+These embedded languages are also implemented in Haskell.
+The approach used in Barrelfish is however to create parsers for their embedded languages so that they may have a \emph{nicer} syntax.
 
 \section{Conclusions}
 \label{sec_conclusions}
+Although the SoOSiM simulator is still considered work in progress, it has already allowed us to formalize the interactions between the different OS modules devised within the S(o)OS\cite{soos} project.
+We believe that this is the strength of our simulator's approach: the quick exploration and formalization of system concepts.
+Fast exploration is achieved by the highly abstracted view of the hardware/system platform.
+However, having to actually program all our OS modules forces us to formalize the interactions within the system; exposing many potential flaws not discovered by an informal (text-based) description of the operating system.
+
+Using embedded languages to program applications that run in our simulated environment, we attain complete control of it's execution.
+By using specific interpretations of our embedded language, we can easily observe specific parts (such as memory access) of an application's execution.
+Using Haskell functions to specify our embedded language constructs, saves us from a high implementation burden usually associated with the tools/compilers for programming languages.
 
 \section{Future Work}
 \label{sec_future_work}
+At the moment the simulation core of SoOSiM is a single-threaded application.
+We expect that as we move to the simulation of systems with 10's to 100's of computing nodes, that the single threaded approach can become a performance bottleneck.
+Although the nodes perform their computation in isolation, the communication between nodes is non-deterministic.
+We plan to use Haskell's implementation of software transactional memory (STM) to safely deal with the non-deterministic communication and still achieve parallel execution.
+
+We will additionally further explore the use of embedded languages in the domain of operating system and programming language design.
+Within the context of the S(o)OS project, we intend to add both explicit parallel composition to our embedded language definition, and implicit parallel interpretation of data-independent sub-expressions.
+We also intend to implement software transactional memory constructs, and investigate its interaction with the operating system.
 
 \section*{Acknowledgements}
 The authors would like to thank Ivan Perez for the design and implementation of the SoOSiM GUI.
@@ -368,5 +418,3 @@ The authors would like to thank Ivan Perez for the design and implementation of 
 \bibliography{waters2012}
 
 \end{document}
-
-
