@@ -13,7 +13,7 @@
    height="263"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.0 r9654"
+   inkscape:version="0.48.1 "
    sodipodi:docname="system.svg">
   <defs
      id="defs4" />
@@ -76,14 +76,14 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="84"
+       x="76"
        y="73.076469"
        id="text2989"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan2991"
-         x="84"
-         y="73.076469">node (\#0)</tspan></text>
+         x="76"
+         y="73.076469">Node (\#0)</tspan></text>
     <rect
        ry="13.281672"
        rx="10"
@@ -97,13 +97,13 @@
        sodipodi:linespacing="125%"
        id="text2988"
        y="73.076469"
-       x="244"
+       x="236"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
        xml:space="preserve"><tspan
          y="73.076469"
-         x="244"
+         x="236"
          id="tspan2990"
-         sodipodi:role="line">node (\#1)</tspan></text>
+         sodipodi:role="line">Node (\#1)</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:1.15246141"
        id="rect2992"
@@ -116,14 +116,14 @@
     <text
        xml:space="preserve"
        style="font-size:22px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Arial;-inkscape-font-specification:Arial"
-       x="404"
+       x="396"
        y="73.076469"
        id="text2994"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
-         x="404"
+         x="396"
          y="73.076469"
-         id="tspan2998">node (\#2)</tspan></text>
+         id="tspan2998">Node (\#2)</tspan></text>
     <rect
        style="fill:none;stroke:#000000;stroke-width:0.93897855"
        id="rect3002"
