@@ -8,7 +8,7 @@
 
 \begin{document}
 
-\title{SoOSiM: System and \\ Programming Language Exploration}
+\title{SoOSiM: Operating System and \\ Programming Language Exploration}
 
 \author{\IEEEauthorblockN{Christiaan Baaij\thanks{Supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465}, Jan Kuper}
 \IEEEauthorblockA{Computer Architecture for Embedded Systems\\
