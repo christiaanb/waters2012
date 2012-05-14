@@ -44,3 +44,5 @@
 
 % \setlength\mathindent{1em}
 \numbersright
+
+\newcommand\soosim{SoOSiM}
