@@ -11,10 +11,16 @@
 \title{SoOSiM: Operating System and \\ Programming Language Exploration}
 
 \author{\IEEEauthorblockN{Christiaan Baaij\thanks{Supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465}, Jan Kuper}
-\IEEEauthorblockA{Computer Architecture for Embedded Systems\\
-Department of EEMCS, University of Twente\\
+\IEEEauthorblockA{Computer Architecture for Embedded Systems,\\
+Department of EEMCS, University of Twente,\\
 Postbus 217, 7500AE Enschede, The Netherlands\\
 Email: \url{{c.p.r.baaij;j.kuper}@@utwente.nl}}
+\and
+\IEEEauthorblockN{Lutz Schubert}
+\IEEEauthorblockA{HLRS -- University of Stuttgart,\\
+Department of Intelligent Service Infrastructures,\\
+Nobelstr. 19, D-70569 Stuttgart, Germany\\
+Email: \url{schubert@@hlrs.de}}
 }
 
 \maketitle
