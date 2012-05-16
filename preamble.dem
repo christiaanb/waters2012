@@ -2,6 +2,8 @@
 \usepackage[utf8x]{inputenc}
 \newcommand\textlambda{\ensuremath{\lambda}}
 
+\usepackage{microtype}
+
 % Support for graphics
 \usepackage[pdftex]{graphicx}
 \usepackage{color}
@@ -22,7 +24,6 @@
 {lhs2TeX -v --poly #1.lhs > #1.tex}%
 \input{#1.tex}%
 }
-
 
 \usepackage{import}
 
@@ -45,4 +46,6 @@
 % \setlength\mathindent{1em}
 \numbersright
 
-\newcommand\soosim{SoOSiM}
+% Prints a trailing space in a smart way.
+\usepackage{xspace}
+\newcommand\soosim{SoOSiM\xspace}

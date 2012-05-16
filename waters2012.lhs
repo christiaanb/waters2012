@@ -8,7 +8,7 @@
 
 \begin{document}
 
-\title{\soosim{}: Operating System and \\ Programming Language Exploration}
+\title{\soosim: Operating System and \\ Programming Language Exploration}
 
 \author{\IEEEauthorblockN{Christiaan Baaij\thanks{Supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465}, Jan Kuper}
 \IEEEauthorblockA{Computer Architecture for Embedded Systems,\\
@@ -27,14 +27,14 @@ Email: \url{schubert@@hlrs.de}}
 
 \begin{abstract}
 \boldmath
-\soosim{} is a simulator developed for the purpose of exploring operating system concepts and operating system modules.
+\soosim is a simulator developed for the purpose of exploring operating system concepts and operating system modules.
 The simulator provides a highly abstracted view of a computing system, consisting of computing nodes, and components that are concurrently executed on these nodes.
 OS modules are subsequently modelled as components that progress as a result of reacting to two types of events: messages from other components, or a system-wide tick event.
 Using this abstract view, a developer can quickly formalize assertions regarding the interaction between operating system modules and applications.
 
-We developed a methodology on top of \soosim{} that enables the precise control of the interaction between a simulated application and the operating system.
+We developed a methodology on top of \soosim that enables the precise control of the interaction between a simulated application and the operating system.
 Embedded languages are used to model the application once, and different interpretations of the embedded language constructs are used to observe specific aspects on application's execution.
-The combination of \soosim{} and embedded languages facilitates the exploration of programming language concepts and their interaction with the operating system.
+The combination of \soosim and embedded languages facilitates the exploration of programming language concepts and their interaction with the operating system.
 \end{abstract}
 
 \section{Introduction}
@@ -53,20 +53,20 @@ As such, being able to extract highly accurate performance figures from a simula
 We do however wish to be able to observe all interactions among application threads and OS modules.
 Additionally, we wish to be able to \emph{zoom in} on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
 
-This paper describes a new simulator, \emph{\soosim{}}, that meets the above requirements.
+This paper describes a new simulator, \emph{\soosim}, that meets the above requirements.
 We elaborate on the main concepts of the simulator in Section~\ref{sec_soosim}, and show how OS modules interact with each other, and with the simulator.
 In Section~\ref{sec_embedded_programming_environment} we describe the use of embedded languages for creation of applications running in the simulated environment.
 The simulation engine, the graphical user interface, and embedded language environment are all written in the functional programming language Haskell\cite{haskell98};
 this means that all code listings in this paper also show Haskell code.
 Due to limitation in the number of pages, we are not be able to elaborate every Haskell notation; the code examples are intended to support the validity of the presented concepts.
-We compare \soosim{} to existing simulation frameworks, and list other related work in Section~\ref{sec_related_work}.
-We enumerate our experiences with \soosim{} in Section~\ref{sec_conclusions}, and discuss potential future work in Section~\ref{sec_future_work}.
+We compare \soosim to existing simulation frameworks, and list other related work in Section~\ref{sec_related_work}.
+We enumerate our experiences with \soosim in Section~\ref{sec_conclusions}, and discuss potential future work in Section~\ref{sec_future_work}.
 
 \section{Abstract System Simulator}
 \label{sec_soosim}
-The purpose of \soosim{} is mainly to provide a platform that allows a developer to observe the interactions between OS modules and application threads.
+The purpose of \soosim is mainly to provide a platform that allows a developer to observe the interactions between OS modules and application threads.
 It is for this reason that we have chosen to make the simulated hardware highly abstract.
-In \soosim{}, the hardware platform is described as a set of nodes.
+In \soosim, the hardware platform is described as a set of nodes.
 Each \emph{node} represents a physical computing object: such as a core, complete CPU, memory controller, etc.
 Every node has a local memory of potentially infinite size.
 The layout and connectivity properties of the nodes are not part of the system description.
@@ -75,11 +75,11 @@ If such a level of detail is required it would have to be modelled explicitly by
 Each \emph{node} hosts a set of components.
 A \emph{component} represents an executable object: such as a thread, application, OS module, etc.
 Components communicate with each other either using direct messaging, or through the local memory of a node.
-Having both explicit messaging and shared memories, \soosim{} supports the two well known methods of communication.
+Having both explicit messaging and shared memories, \soosim supports the two well known methods of communication.
 Because multiple components can send messages to one component, all component have a message queue.
 All components in a simulated system, even those hosted within the same node, are executed concurrently.
 The simulator poses no restrictions as to which components can communicate with each other, nor to which node's local memory they can read from and write to.
-A user of \soosim{} would have to model those restrictions explicitly if required.
+A user of \soosim would have to model those restrictions explicitly if required.
 A schematic overview of an example system can be seen in Figure~\ref{img_system}.
 
 \def\svgwidth{\columnwidth}
@@ -99,11 +99,11 @@ In that case the component will not be executed by the simulator during a \emph{
 \subsection{OS Component Descriptions}
 Components of the simulated system are, like the simulator core, also described in the functional programming language Haskell.
 This means that each component is described as a function.
-In case of \soosim{}, such a function is not a simple algebraic function, but a function executed within the context of the simulator.
+In case of \soosim, such a function is not a simple algebraic function, but a function executed within the context of the simulator.
 The Haskell parlance for such a computational context is a \emph{Monad}, the term we will use henceforth.
 Because the function is executed within the monad, it can have \emph{side-effects} such as sending messages to other components, or reading the memory of a local memory.
 In addition, the function can be temporarily suspended at (almost) any point in the code.
-\soosim{} needs to be able to suspend the execution of a function so that it may emulate synchronous messaging between components, a subject we will further elaborate later on.
+\soosim needs to be able to suspend the execution of a function so that it may emulate synchronous messaging between components, a subject we will further elaborate later on.
 
 We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{SimEvent}.
 The result of this function will be the (potentially updated) internal state.
@@ -221,7 +221,7 @@ memoryManager s (Message caller content)
 \end{program}
 
 \subsection{Simulator GUI}
-The state of a simulated system can be observed using the \soosim{} GUI, of which a screenshot is shown in Figure~\ref{fig_simulator_gui}.
+The state of a simulated system can be observed using the \soosim GUI, of which a screenshot is shown in Figure~\ref{fig_simulator_gui}.
 The GUI allows you to run and step through a simulation at different speeds.
 On the screenshot we see, at the top, the toolbar controlling the simulation, in the middle, a schematic overview of the simulated system in, and specific information belonging to a selected component at the bottom.
 Different colours indicate whether a component is active, waiting for a response, or idle.
@@ -241,9 +241,9 @@ A general rule-of-thumb for a well performing system is when OS modules have man
 
 \section{Embedded Programming Environment}
 \label{sec_embedded_programming_environment}
-One of the reasons to develop \soosim{} is to observe the interaction between applications and the operating system.
+One of the reasons to develop \soosim is to observe the interaction between applications and the operating system.
 Additionally, we want to explore programming language concepts intended for parallel and concurrent programming, and how they impact the entire software stack.
-For this purpose we have developed a methodology on top of \soosim{}, that uses embedded languages to specify the applications.
+For this purpose we have developed a methodology on top of \soosim, that uses embedded languages to specify the applications.
 Our methodology consists of two important aspects:
 
 \begin{itemize}
@@ -319,13 +319,11 @@ A partial specification of the \hs{Symantics} (a pun on \emph{syntax} and \emph{
 \begin{program}
 \begin{code}
 class Symantics repr where
-  fun  :: (repr a -> repr b) -> repr (a :-> b)
-  app  :: repr (a :-> b) -> repr a -> repr b
-\end{code}
-$\ \ \ .\ .\ .$
-\begin{code}
-^^ drf   :: repr (Ref a) -> repr a
-^^ (=:)  :: repr (Ref a) -> repr a -> repr Void
+  fun   :: (repr a -> repr b) -> repr (a :-> b)
+  app   :: repr (a :-> b) -> repr a -> repr b
+
+  drf   :: repr (Ref a) -> repr a
+  (=:)  :: repr (Ref a) -> repr a -> repr Void
 \end{code}
 \caption{Embedded Language - Partial Definition}
 \label{lst_embedded_language_interface}
@@ -342,13 +340,12 @@ We read the types of our language definition constructs as follows:
 To give a desired interpretation of an application described by our embedded language we simply have to implement an instance of the \hs{Symantics} type-class.
 These interpretations include pretty-printing the description, determining the size of expression, evaluating the description as if it were a normal Haskell function, etc.
 
-In the context of this paper we are however interested in \emph{observing} (specific parts of) the execution of an application inside the \soosim{} simulator.
+In the context of this paper we are however interested in \emph{observing} (specific parts of) the execution of an application inside the \soosim simulator.
 As a running example, we show part of an instance definition that observes the invocations of the memory manager module upon dereferencing and updating mutable references:
 
 \begin{program}
 \begin{code}
 instance Symantics SimM where
-  ...
 
   drf x = do
     i     <- foo x
@@ -361,23 +358,23 @@ instance Symantics SimM where
     mmId  <- componentLookup "MemoryManager"
     invoke mmId (mashal (Write i v))
 \end{code}
-\caption{Observing Memory Access}
+\caption{Observing Memory Access - Partial definition}
 \label{lst_observing_memory_access}
 \end{program}
 
 We explained earlier that the simulator \emph{monad} (\hs{SimM}) should be seen as a computational context in which a function is executed.
-By making our simulator monad the computational \hs{instance} (or environment) of our embedded language definition, we can now run the applications defined with our embedded language inside the \soosim{} simulator.
+By making our simulator monad the computational \hs{instance} (or environment) of our embedded language definition, we can now run the applications defined with our embedded language inside the \soosim simulator.
 Most language constructs of our embedded language will be implemented in such a way that they behave like their Haskell counterpart.
 The constructs where we made minor adjustments are the \hs{drf} and (=:) constructs, which now enact communication with our \emph{Memory Manager} OS module.
 By using the \hs{invoke} function, our application descriptions are also suspended whenever they dereference or update memory locations, as they have to wait for a response from the memory manager.
-Using the \soosim{} GUI, we can now observe the communication patterns between the applications described in our embedded language, and our newly created OS module.
+Using the \soosim GUI, we can now observe the communication patterns between the applications described in our embedded language, and our newly created OS module.
 
 \subsection{Further Extensions and Interpretations}
 The use cases of embedded languages in the context of our simulation framework extend far beyond the example given in the previous subsection.
 We can for example easily extend our language definition with constructs for parallel composition, and introduce blocking mutable references for communication between threads.
 An initial interpretation (in the form of a type-class instance) could then be sequential execution, allowing for the simple search of algorithmic bugs in the application.
 A second instance could then use the Haskell counterparts for parallel composition and block mutable variables to mimic an actual concurrent execution.
-A third instance could then interact with OS modules inside a \soosim{} simulated system, allowing a developer to observe the interaction between our new language constructs and the operating system.
+A third instance could then interact with OS modules inside a \soosim simulated system, allowing a developer to observe the interaction between our new language constructs and the operating system.
 
 We said earlier that one of the interpretations of an embedded language description could be a pretty-printed string-representation.
 Following up on the idea of converting a description to a datatype, we can also interpret our application description as an abstract syntax tree or even a dependency graph.
@@ -391,7 +388,7 @@ It allows a developer to execute normal x86-code in a simulated environment.
 COTSon is far too detailed for our needs, and does not facilitate the easy exploration of a complete operating system.
 
 OMNeT++\cite{omnet} is a C++-based discrete event simulator for modelling distributed or parallel system.
-Compared to \soosim{}, OMNeT++ does not allow the straightforward creation of new modules, meaning the distribution of modules is static.
+Compared to \soosim, OMNeT++ does not allow the straightforward creation of new modules, meaning the distribution of modules is static.
 OMNeT++ is thus not meeting our simulation needs to dynamically instantiate new OS modules and application threads.
 
 House\cite{house} is an operating system built in Haskell; it uses a Haskell run-time system allowing direct execution on bare metal.
@@ -404,9 +401,9 @@ The approach used in Barrelfish is however to create parsers for their embedded 
 
 \section{Conclusions}
 \label{sec_conclusions}
-Although the \soosim{} simulator is still considered work in progress, it has already allowed us to formalize the interactions between the different OS modules devised within the S(o)OS\cite{soos} project.
+Although the \soosim simulator is still considered work in progress, it has already allowed us to formalize the interactions between the different OS modules devised within the S(o)OS\cite{soos} project.
 We believe that this is the strength of our simulator's approach: the quick exploration and formalization of system concepts.
-Fast exploration is achieved by the highly abstracted view of \soosim{} on the hardware / system.
+Fast exploration is achieved by the highly abstracted view of \soosim on the hardware / system.
 However, having to actually program all our OS modules forces us to formalize the interactions within the system; exposing any potential flaw not discovered by an informal (text-based) description of the operating system.
 
 By using embedded languages to program applications that run in our simulated environment, we attain complete control of its execution.
@@ -415,7 +412,7 @@ Using Haskell functions to specify our embedded language constructs saves us fro
 
 \section{Future Work}
 \label{sec_future_work}
-At the moment, the simulation core of \soosim{} is a single-threaded.
+At the moment, the simulation core of \soosim is a single-threaded.
 We expect that as we move to the simulation of systems with 10's to 100's of computing nodes, that the single threaded approach can become a performance bottleneck.
 Although individual components are susceptible for parallel execution, the communication between components is problematically non-deterministic.
 We plan to use Haskell's implementation of software transactional memory (STM) to safely deal with the non-deterministic communication and still achieve parallel execution.
@@ -425,7 +422,7 @@ Within the context of the S(o)OS project, we intend to add both explicit paralle
 We also intend to implement software transactional memory constructs, and investigate their interaction with the operating system.
 
 \section*{Acknowledgements}
-The authors would like to thank Ivan Perez for the design and implementation of the \soosim{} GUI.
+The authors would like to thank Ivan Perez for the design and implementation of the \soosim GUI.
 
 \bibliographystyle{IEEEtran}
 \bibliography{waters2012}
