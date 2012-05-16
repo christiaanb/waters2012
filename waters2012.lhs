@@ -87,7 +87,7 @@ A schematic overview of an example system can be seen in Figure~\ref{img_system}
 \includesvg{system}
 \caption{Abstracted System}
 \label{img_system}
-\vspace{-1.5em}
+\vspace{-1em}
 \end{figure}
 
 The simulator progresses all components concurrently in one discrete step called a \hs{tick}.
@@ -236,7 +236,7 @@ A general rule-of-thumb for a well performing system is when OS modules have man
 \includegraphics[width=18cm]{images/gui.png}
 \caption{Simulator GUI}
 \label{fig_simulator_gui}
-\vspace{-1.5em}
+\vspace{-0.5em}
 \end{figure*}
 
 \section{Embedded Programming Environment}
