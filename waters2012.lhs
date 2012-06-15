@@ -10,7 +10,7 @@
 
 \title{\soosim: Operating System and \\ Programming Language Exploration}
 
-\author{\IEEEauthorblockN{Christiaan Baaij\thanks{Supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465}, Jan Kuper}
+\author{\IEEEauthorblockN{Christiaan Baaij\thanks{This work is supported through the S(o)OS project, sponsored by the European Commission under FP7-ICT-2009.8.1, Grant Agreement No. 248465. \soosim is available on: http://hackage.haskell.org/package/SoOSiM}, Jan Kuper}
 \IEEEauthorblockA{Computer Architecture for Embedded Systems,\\
 Department of EEMCS, University of Twente,\\
 Postbus 217, 7500AE Enschede, The Netherlands\\
@@ -45,41 +45,43 @@ The S(o)OS project aims to research OS concepts and specific OS modules, which a
 One of the key concepts of S(o)OS is that only those OS modules needed by a application thread, are actually loaded into the (local) memory of a Core / CPU on which the thread will run.
 This execution environment differs from contemporary operating systems where every core runs a complete copy of the (monolithic) operating system.
 
-A basic requirement that we thus have towards any simulator, are the facilities to straightforwardly simulate the instantiation of application threads and OS modules.
+A basic requirement that the S(o)OS project has towards any simulator, are the facilities to straightforwardly simulate the instantiation of application threads and OS modules.
 Aside from the fact that the S(o)OS-envisioned system will be dynamic as a result of loading OS modules on-the-fly; large-scale systems also tend to be dynamic in the sense that computing nodes can (permanently) disappear (failure), or appear (hot-swap).
-Hence, we also require that our simulator facilitates the straightforward creation and destruction of computing elements.
-Our current need for a simulator rests mostly in formalizing the S(o)OS concept, and examining the interaction between our envisioned OS modules and the application threads.
+Hence, the simulator has to facilitate the straightforward creation and destruction of computing elements.
+The current need for a simulator rests mostly in formalizing the S(o)OS concept, and examining the interaction between the envisioned OS modules and the application threads.
 As such, being able to extract highly accurate performance figures from a simulated system is not a key requirement.
-We do however wish to be able to observe all interactions among application threads and OS modules.
-Additionally, we wish to be able to \emph{zoom in} on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
+It should however facilitate the ability to observe all interactions between application threads and OS modules should.
+Additionally, a user should able to \emph{zoom in} on particular aspects of the behaviour of an application: such as memory access, messaging, etc.
 
 This paper describes a new simulator, \emph{\soosim}, that meets the above requirements.
 We elaborate on the main concepts of the simulator in Section~\ref{sec_soosim}, and show how OS modules interact with each other, and with the simulator.
-In Section~\ref{sec_embedded_programming_environment} we describe the use of embedded languages for creation of applications running in the simulated environment.
-The simulation engine, the graphical user interface, and embedded language environment are all written in the functional programming language Haskell\cite{haskell98};
+Section~\ref{sec_embedded_programming_environment} describes the use of embedded languages for the creation of applications running in the simulated environment.
+The simulation engine, the graphical user interface, and embedded language environment are all written in the functional programming language Haskell\cite{RWH};
 this means that all code listings in this paper also show Haskell code.
 Due to limitation in the number of pages, we are not be able to elaborate every Haskell notation; the code examples are intended to support the validity of the presented concepts.
-We compare \soosim to existing simulation frameworks, and list other related work in Section~\ref{sec_related_work}.
-We enumerate our experiences with \soosim in Section~\ref{sec_conclusions}, and discuss potential future work in Section~\ref{sec_future_work}.
+Section~\ref{sec_related_work} compares \soosim to existing simulation frameworks, and lists other related work.
+Section~\ref{sec_conclusions} enumerates our experiences with \soosim, and Section~\ref{sec_future_work} discusses potential future work.
 
 \section{Abstract System Simulator}
 \label{sec_soosim}
 The purpose of \soosim is mainly to provide a platform that allows a developer to observe the interactions between OS modules and application threads.
-It is for this reason that we have chosen to make the simulated hardware highly abstract.
+It is for this reason that the simulated hardware is highly abstract.
 In \soosim, the hardware platform is described as a set of nodes.
 Each \emph{node} represents a physical computing object: such as a core, complete CPU, memory controller, etc.
 Every node has a local memory of potentially infinite size.
 The layout and connectivity properties of the nodes are not part of the system description.
-If such a level of detail is required it would have to be modelled explicitly by the user.
 
 Each \emph{node} hosts a set of components.
 A \emph{component} represents an executable object: such as a thread, application, OS module, etc.
 Components communicate with each other either using direct messaging, or through the local memory of a node.
 Having both explicit messaging and shared memories, \soosim supports the two well known methods of communication.
-Because multiple components can send messages to one component, all component have a message queue.
-All components in a simulated system, even those hosted within the same node, are executed concurrently.
+Components have a (hidden) message queue, because:
+\begin{itemize}
+  \item Multiple components can send messages to the same component concurrently.
+  \item A component can receive messages while it is waiting for a response from another component.
+\end{itemize}
+All components in a simulated system, even those hosted within the same node, are executed concurrently (from the component's point of view).
 The simulator poses no restrictions as to which components can communicate with each other, nor to which node's local memory they can read from and write to.
-A user of \soosim would have to model those restrictions explicitly if required.
 A schematic overview of an example system can be seen in Figure~\ref{img_system}.
 
 \def\svgwidth{\columnwidth}
@@ -100,119 +102,125 @@ In that case the component will not be executed by the simulator during a \emph{
 Components of the simulated system are, like the simulator core, also described in the functional programming language Haskell.
 This means that each component is described as a function.
 In case of \soosim, such a function is not a simple algebraic function, but a function executed within the context of the simulator.
-The Haskell parlance for such a computational context is a \emph{Monad}, the term we will use henceforth.
+The Haskell parlance for such a computational context is a \emph{Monad}~\cite[Chapter~14]{RWH}, the term we will use henceforth.
 Because the function is executed within the monad, it can have \emph{side-effects} such as sending messages to other components, or reading the memory of a local memory.
 In addition, the function can be temporarily suspended at (almost) any point in the code.
 \soosim needs to be able to suspend the execution of a function so that it may emulate synchronous messaging between components, a subject we will further elaborate later on.
 
-We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{SimEvent}.
+We describe a component as a function that, as its first argument, receives a user-defined internal state, and as its second argument a value of type \hs{Event a}.
 The result of this function will be the (potentially updated) internal state.
-Values of type \hs{SimEvent} can either be:
+Values of type \hs{Event a} can either be:
 \begin{itemize}
-  \item A message from another component.
+  \item A message from another component, where `\hs{a}' represents the datatype of the content of the message.
   \item A \emph{null} message.
 \end{itemize}
 We thus have the following type signature for a component:
 \numbersoff
 \begin{code}
-component :: state -> SimEvent -> SimM state
+component  ::  State -> Event a -> Sim State
 \end{code}
-The \hs{SimM} annotation on the result type means that this function is executed within the simulator monad.
+The \hs{Sim} annotation on the result type means that this function is executed within the simulator monad.
 The user-defined internal state can be used to store any information that needs to perpetuate across simulator \emph{ticks}.
 
-To include a component description in the simulator, the developer will have to create a so-called \emph{instance} of the \hs{ComponentIface} \emph{type-class}.
-A \emph{type-class} in Haskell can be compared to an interface definition as those known in object-oriented languages.
+To include a component description in the simulator, the developer will have to create a so-called \emph{instance} of the \hs{ComponentInterface} \emph{type-class}.
+A \emph{type-class}~\cite[Chapter~6]{RWH} in Haskell can be compared to an interface definition as those known in object-oriented languages.
 An \emph{instance} of a \emph{type-class} is a concrete instantiation of such an interface.
-The \hs{ComponentIface} requires the instantiation of the following values to completely define a component:
+\soosim users should use a singleton datatype to uniquely label the interface description of a component.
+The \hs{ComponentInterface} consists of the following values to completely define a component:
 
 \begin{itemize}
+  \item The datatype representing the internal state.
+  \item The datatype of the received messages.
+  \item The datatype of the send messages.
   \item The initial internal state of the component.
   \item The unique name of the component.
-  \item The monadic function describing the behaviour of the component.
+  \item The monadic function describing the behaviour.
 \end{itemize}
 
-We remark that we are aiming at a high level of abstraction for the behavioural descriptions of our OS modules, where the focus is mainly on the interaction with other OS modules and application threads.
+We stress again that we are aiming at a high level of abstraction for the behavioural descriptions of our OS modules, where the focus is mainly on the interaction with other OS modules and application threads.
 
 \subsection{Interaction with the simulator}
 Components have several functions at their disposal to interact with the simulator and consequently interact with other components.
 The available functions are the following:
+\begin{itemize}
 % \paragraph{\hs{registerComponent}}
 % Register a component definition with the simulator.
 % This means that an \emph{instance} of the \hs{CompIface} for this component must be defined.
-\paragraph{\hs{createComponent}}
-Instantiate a new component on a specified node. %; the component definition must be registered with the simulator.
-\paragraph{\hs{invoke}}
-Send a message to another component, and wait for the answer.
-This means that whenever a component uses this function it will be (temporarily) suspended by the simulator.
+\item \hs{createComponent} instantiates a new component on a specified node.
+%; the component definition must be registered with the simulator.
+\item \hs{invoke} sends a message to another component, and waits for the answer.
+Whenever a component uses this function it will be suspended by the simulator.
 Several simulator ticks might pass before the callee sends a response.
-Once the response is put in the message queue of the caller, the simulator resumes the execution of the calling component.
-Having this synchronization available obviates the need to specify the behaviour of a component as a finite state machine.
-\paragraph{\hs{invokeAsync}}
-Send a message to another component, and register a handler with the simulator to process the response.
-Unlike \hs{invoke}, using this function will \emph{not} suspend the execution of the component.
-\paragraph{\hs{respond}}
-Send a message to another component as a response to an invocation.
-\paragraph{\hs{yield}}
-Inform the simulator that the component does not want to receive \emph{null} messages.
-\paragraph{\hs{readMem}}
-Read at a specified address of a node's local memory.
-\paragraph{\hs{writeMem}}
-Write a new value at a specified address of a node's local memory.
-\paragraph{\hs{componentLookup}}
-Lookup the unique identifier of a component on a specified node.
-Components have two unique identifiers, their global \emph{name} (as specified in the \hs{CompIface} instance), and a \hs{ComponentId} that is a unique number corresponding to a specific instance of a component.
-When you want to \emph{invoke} a component, you need to know the unique \hs{ComponentId} of the specific instance.
-To give a concrete example, using the system of Figure~\ref{img_system} as our context: \emph{Thread(\#6)} wants to invoke the instance of the \emph{Memory Manager} that is running on the same Node (\#2).
+Once the response is available the simulator resumes the execution of the calling component.
+% Once the response is put in the message queue of the caller, the simulator resumes the execution of the calling component.
+% Having this synchronization available obviates the need to specify the behaviour of a component as a finite state machine.
+\item \hs{invokeAsync} sends a message to another component, and registers a handler with the simulator to process the response.
+In contrast to \hs{invoke}, using this function will \emph{not} suspend the execution of the component.
+\item \hs{respond} sends a message to another component as a response to an invocation.
+\item \hs{yield} informs the simulator that the component does not want to receive \emph{null} messages.
+\item \hs{readMem} performs a read at a specified address of a node's local memory.
+\item \hs{writeMem} writes a value at a specified address of a node's local memory.
+\item The \hs{componentLookup} function performs a lookup of the unique identifier of a component given a specified interface.
+\end{itemize}
+
+Components have a \hs{ComponentId} that is a unique number corresponding to a specific instance of a component.
+% When you want to \emph{invoke} a component, you need to know the unique \hs{ComponentId} of the specific instance.
+The knowledge of the unique \hs{ComponentId} of the specific instance is needed to invoke a component.
+To give a concrete example, using the system of Figure~\ref{img_system} as our context: \emph{Thread(\#6)} wants to invoke the instance of the \emph{MemoryManager} that is running on the same Node (\#2).
 As \emph{Thread(\#6)} was not involved with the instantiation of that OS module, it has no idea what the specific \hs{ComponentId} of the memory manager on Node \#2 is.
-It does however know the unique global name of all memory managers, so it can use the \hs{componentLookup} function to find the \hs{Memory Manager} with ID \#5 that is running on Node \#2.
+It does however know the interface-label of the memory managers, so it can use the \hs{componentLookup} function to find the \hs{MemoryManager} with ID \#5 that is running on Node \#2.
 
 \subsection{Example OS Component: Memory Manager}
 This subsection demonstrates the use of the simulator API, taking the \hs{Read} code-path of the memory manager module as an example.
-In our case the memory manager takes care that the reads or writes of a global address end up in the correct node's local memory.
+The memory manager takes care that the reads or writes of a global address end up in the correct node's local memory.
 As part of its internal state the memory manager keeps a lookup table.
 This lookup table states whether an address range belongs to the local memory of the node that hosts the memory manager, or whether that address is handled by a memory manager on another node.
 An entry of the lookup table has the following datatype:
 \begin{code}
 data Entry = EntryC
   {  base   :: Int
-  ,  range  :: Int
+  ,  scope  :: Int
   ,  scrId  :: Maybe ComponentId
   }
 \end{code}
-The fields \hs{base} and \hs{range} together describe the memory address range defined by this entry.
+The fields \hs{base} and \hs{scope} together describe the memory address range defined by this entry.
 The \hs{srcId} tells us whether the range is hosted on the node's local memory, or whether another memory manager is responsible for the address range.
 If the value of \hs{scrId} is \hs{Nothing} the address is hosted on the node's local memory; if \hs{srcId} has the value \hs{Just cmpId}, the memory manager with ID \hs{cmpId} is responsible for the address range.
 
 Listing~\ref{lst_read_logic_memory_manager} highlights the Haskell code for the read-logic of the memory manager.
-Lines 1 and 2 show the type signature of the function defining the behaviour of the memory manager.
-On line 3 we use pattern-matching, to match on a \hs{Message} event, binding the values of the ComponentId of the caller, and the message content, to \hs{caller} and \hs{content} respectively.
-Because components can send any type of message to the memory manager, including types we do not expect, we \hs{unmarshal} the message content on line 4, and only continue when it is a \hs{Read} message (indicated by the vertical bar \hs{|}~).
+Lines 1, 2, and 3 show the type signature of the function defining the behaviour of the memory manager.
+On line 4 we use pattern-matching, to match on a \hs{Message} event, binding the values of the message content, and the identification of the caller, to \hs{content} and \hs{caller} respectively.
+We examine the \hs{content} on line 4, and only continue when it is a \hs{Read} message (indicated by the vertical bar \hs{|}~).
 If it is a \hs{Read} message, we bind the value of the address to the name \hs{addr}.
-On line 6 we lookup the address range entry which encompasses \hs{addr}.
-Line 7 starts a \hs{case}-statement discriminating on the value of the \hs{srcId} of the entry.
-If the \hs{srcId} is \hs{Nothing} (line 8-11), we read the node's local memory using the \hs{readMem} function, \hs{respond} to the caller with the read value, and finally \hs{yield} to the simulator.
-When the address range is handled by a \hs{remote} memory manager (line 12-15), we \hs{invoke} that specific memory manager module with the read request and wait for a response.
+On line 7 we lookup the address range entry which encompasses \hs{addr}.
+Line 8 starts a \hs{case}-statement discriminating on the value of the \hs{srcId} of the entry.
+If the \hs{srcId} is \hs{Nothing} (line 9-12), we read the node's local memory using the \hs{readMem} function, \hs{respond} to the caller with the read value, and finally \hs{yield} to the simulator.
+When the address range is handled by a \hs{remote} memory manager (line 13-17), we \hs{invoke} that specific memory manager module with the read request and wait for a response.
 We remark that many simulator cycles might pass between the invocation and the return, as the \hs{remote} memory manager might be processing many requests.
 Once we receive the value from the \hs{remote} memory manager, we \hs{respond} to the original caller forwarding the received value.
+
+Note that the functions \hs{invoke} and \hs{respond} each receive, as their first argument, the singleton-datatype that was used to label the memory manager interface.
+This label is used to access the \hs{Receive} and \hs{Send} datatype fields of the interface, and statically ensures that we only send and receive datatypes that correspond to the interface of the memory manager.
 \begin{program}
 \begin{code}
-memoryManager :: MemState
-  -> SimEvent
-  -> SimM MemState
-memoryManager s (Message caller content)
-  | (Read addr) <- unMarshal content
+memoryManager  ::  MemState
+               ->  Event MemCommand
+               ->  Sim MemState
+memoryManager s (Message content caller)
+  | (Read addr) <- content
   =  do
      let entry = addressLookup s addr
      case (srcId entry) of
        Nothing -> do
          addrVal <- readMem addr
-         respond caller addrVal
+         respond MemoryManager caller addrVal
          yield s
        Just remote -> do
-         response <- invoke remote content
-         respond caller response
+         response <- invoke MemoryManager
+         ^^ ^^ ^^ ^^ ^^ ^^ remote content
+         respond MemoryManager caller response
          yield s
-  | (Write addr val) <- unMarshal content
+  | (Write addr val) <- content
   = do
     ...
 \end{code}
@@ -223,8 +231,8 @@ memoryManager s (Message caller content)
 \subsection{Simulator GUI}
 The state of a simulated system can be observed using the \soosim GUI, of which a screenshot is shown in Figure~\ref{fig_simulator_gui}.
 The GUI allows you to run and step through a simulation at different speeds.
-On the screenshot we see, at the top, the toolbar controlling the simulation, in the middle, a schematic overview of the simulated system in, and specific information belonging to a selected component at the bottom.
-Different colours indicate whether a component is active, waiting for a response, or idle.
+On the screenshot we see, at the top, the toolbar controlling the simulation, in the middle, a schematic overview of the simulated system, and specific information belonging to a selected component at the bottom.
+Different colours are used to indicate whether a component is active, waiting for a response, or idle.
 The \emph{Component Info} box shows both static and statistical information regarding a selected component.
 Several statistics are collected by the simulator, including the number of simulation cycles spent in a certain state (active / idle / waiting), messages sent and received, etc.
 
@@ -314,7 +322,7 @@ However, we have consequently saved ourselves from many implementation burdens a
 \subsection{Interpreting an Embedded Language}
 We mentioned the concept of \emph{type-classes} when we discussed the process of including a component description in the simulator.
 Following the \emph{final tagless}\cite{final_tagless_embedding} encoding of embedded languages in Haskell, we use a type-class to define the language constructs of our mini functional language with mutable references.
-A partial specification of the \hs{Symantics} (a pun on \emph{syntax} and \emph{semantics}) type-class, defining our \emph{embedded language}, is shown in Listing~\ref{lst_embedded_language_interface}.
+A partial specification of the \hs{Symantics} (a pun on \emph{syntax} and \emph{semantics}~\cite{final_tagless_embedding}) type-class, defining our \emph{embedded language}, is shown in Listing~\ref{lst_embedded_language_interface}.
 
 \begin{program}
 \begin{code}
@@ -325,7 +333,7 @@ class Symantics repr where
   drf   :: repr (Ref a) -> repr a
   (=:)  :: repr (Ref a) -> repr a -> repr Void
 \end{code}
-\caption{Embedded Language - Partial Definition}
+\caption{Embedded Language - Partial Definition. Viz.~\cite{final_tagless_embedding}}
 \label{lst_embedded_language_interface}
 \end{program}
 
@@ -345,24 +353,23 @@ As a running example, we show part of an instance definition that observes the i
 
 \begin{program}
 \begin{code}
-instance Symantics SimM where
-
+instance Symantics Sim where
   drf x = do
     i     <- foo x
-    mmId  <- componentLookup "MemoryManager"
-    invoke mmId (marshal (Read i))
+    mmId  <- componentLookup MemoryManager
+    invoke MemoryManager mmId (Read i)
 
   x =: y = do
     i     <- foo x
     v     <- bar y
-    mmId  <- componentLookup "MemoryManager"
-    invoke mmId (mashal (Write i v))
+    mmId  <- componentLookup MemoryManager
+    invoke MemoryManager mmId (Write i v)
 \end{code}
 \caption{Observing Memory Access - Partial definition}
 \label{lst_observing_memory_access}
 \end{program}
 
-We explained earlier that the simulator \emph{monad} (\hs{SimM}) should be seen as a computational context in which a function is executed.
+We explained earlier that the simulator \emph{monad} (\hs{Sim}) should be seen as a computational context in which a function is executed.
 By making our simulator monad the computational \hs{instance} (or environment) of our embedded language definition, we can now run the applications defined with our embedded language inside the \soosim simulator.
 Most language constructs of our embedded language will be implemented in such a way that they behave like their Haskell counterpart.
 The constructs where we made minor adjustments are the \hs{drf} and (=:) constructs, which now enact communication with our \emph{Memory Manager} OS module.
@@ -412,7 +419,7 @@ Using Haskell functions to specify our embedded language constructs saves us fro
 
 \section{Future Work}
 \label{sec_future_work}
-At the moment, the simulation core of \soosim is a single-threaded.
+At the moment, the simulation core of \soosim is single-threaded.
 We expect that as we move to the simulation of systems with 10's to 100's of computing nodes, that the single threaded approach can become a performance bottleneck.
 Although individual components are susceptible for parallel execution, the communication between components is problematically non-deterministic.
 We plan to use Haskell's implementation of software transactional memory (STM) to safely deal with the non-deterministic communication and still achieve parallel execution.
